@@ -20,6 +20,12 @@ app.get('/health/db', async (_req, res) => {
   }
 });
 
+app.get('/ping', async (_req, res) => {
+  const [rows] = await pool.query('SELECT * FROM ping ORDER BY id DESC LIMIT 5');
+  res.json(rows);
+});
+
+
 app.listen(PORT, HOST, () => {
   console.log(`Running on http://${HOST}:${PORT}`);
 });
