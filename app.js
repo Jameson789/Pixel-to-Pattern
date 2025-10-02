@@ -1,34 +1,25 @@
 import express from 'express';
-//import mariadb from 'mariadb';
-const PORT = 3000;
+import pool from './db.js';
+
+const PORT = process.env.PORT || 3000;
+const HOST = process.env.HOST || '0.0.0.0';
 
 const app = express();
-
 app.use(express.urlencoded({ extended: false }));
-
 app.set('view engine', 'ejs');
 
-// const pool = mariadb.createPool({
-//     host: 'localhost',
-//     user: 'root',
-//     database: 'portfolio',
-//     password: '1234'
-// });
+app.get('/', (req, res) => res.render('home'));
 
-// async function connect() {
-//     try {
-//         const conn = await pool.getConnection();
-//         console.log("Connected to mariaDB");
-//         return conn;
-//     } catch (err) {
-//         console.log('Error connecting to MariaDB: ' + err);
-//     }
-// }; 
-
-app.get('/', async (req, res) => {
-    res.render('home');
+app.get('/health/db', async (_req, res) => {
+  try {
+    const [rows] = await pool.query('SELECT 1 AS ok');
+    res.json({ db: 'ok', result: rows[0].ok });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ db: 'error', message: err.message });
+  }
 });
 
-app.listen(PORT, () => {
-    console.log(`Running on port http://localhost:${PORT}` );
+app.listen(PORT, HOST, () => {
+  console.log(`Running on http://${HOST}:${PORT}`);
 });
