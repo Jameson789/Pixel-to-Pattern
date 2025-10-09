@@ -13,6 +13,10 @@ let activeColor = PALETTE[1]; // default: black
 
 const paletteEl = document.getElementById("palette");
 const gridEl = document.getElementById("grid");
+const rowsInput = document.getElementById("rows");
+const colsInput = document.getElementById("cols");
+const generateBtn = document.getElementById("generate");
+
 
 // Build palette
 PALETTE.forEach((color, i) => {
@@ -46,4 +50,10 @@ function buildGrid(rows, cols) {
   }
 }
 
-buildGrid(10, 20);
+buildGrid(10, 10); 
+
+generateBtn.addEventListener("click", () => {
+  const rows = parseInt(rowsInput.value) || 10;
+  const cols = parseInt(colsInput.value) || 10;
+  buildGrid(rows, cols);
+});
