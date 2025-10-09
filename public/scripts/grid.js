@@ -8,8 +8,6 @@ const PALETTE = [
   { id: "purple", hex: "#8b5cf6" }
 ];
 
-const ROWS = 10;
-const COLS = 10;
 
 let activeColor = PALETTE[1]; // default: black
 
@@ -30,14 +28,22 @@ PALETTE.forEach((color, i) => {
 });
 
 // 10x10 grid
-for (let r = 0; r < 10; r++) {
-  for (let c = 0; c < 10; c++) {
-    const cell = document.createElement("div");
-    cell.className = "cell";
-    cell.addEventListener("click", () => {
-      cell.style.background =
-        cell.style.background === activeColor.hex ? "#ffffff" : activeColor.hex;
-    });
-    gridEl.appendChild(cell);
+function buildGrid(rows, cols) {
+  gridEl.innerHTML = "";
+  gridEl.style.gridTemplateColumns = `repeat(${cols}, 30px)`;
+  gridEl.style.gridTemplateRows = `repeat(${rows}, 30px)`;
+
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      const cell = document.createElement("div");
+      cell.className = "cell";
+      cell.addEventListener("click", () => {
+        cell.style.background =
+          cell.style.background === activeColor.hex ? "#ffffff" : activeColor.hex;
+      });
+      gridEl.appendChild(cell);
+    }
   }
 }
+
+buildGrid(10, 20);
