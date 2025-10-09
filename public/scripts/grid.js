@@ -5,7 +5,7 @@ const PALETTE = [
   { id: "green",  hex: "#22c55e" },
   { id: "blue",   hex: "#3b82f6" },
   { id: "yellow", hex: "#f59e0b" },
-  { id: "purple", hex: "#8b5cf6" },
+  { id: "purple", hex: "#8b5cf6" }
 ];
 
 let activeColor = PALETTE[1]; // default: black
