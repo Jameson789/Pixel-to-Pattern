@@ -2,7 +2,7 @@ import express from 'express';
 import pool from './db.js';
 
 const PORT = process.env.PORT || 3000;
-const HOST = process.env.HOST || '0.0.0.0';
+const HOST = process.env.HOST || 'localhost';
 
 const app = express();
 app.use(express.urlencoded({ extended: false }));
