@@ -5,15 +5,18 @@ const PALETTE = [
   { id: "green",  hex: "#22c55e" },
   { id: "blue",   hex: "#3b82f6" },
   { id: "yellow", hex: "#f59e0b" },
-  { id: "purple", hex: "#8b5cf6" },
+  { id: "purple", hex: "#8b5cf6" }
 ];
+
+const ROWS = 10;
+const COLS = 10;
 
 let activeColor = PALETTE[1]; // default: black
 
 const paletteEl = document.getElementById("palette");
 const gridEl = document.getElementById("grid");
 
-// palette
+// Build palette
 PALETTE.forEach((color, i) => {
   const sw = document.createElement("div");
   sw.className = "swatch" + (i === 1 ? " active" : "");
