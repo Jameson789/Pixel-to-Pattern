@@ -7,7 +7,7 @@ const HOST = process.env.HOST || 'localhost';
 const app = express();
 
 // allow JSON bodies for API routes
-app.use(express.json());
+app.use(express.json({ limit: '1mb'}));
 app.use(express.urlencoded({ extended: false }));
 app.use(express.static("public"));
 app.set('view engine', 'ejs');
