@@ -1,7 +1,3 @@
-// public/scripts/pattern.js
-// Crochet pattern generation that reads directly from the DOM (no global `cells` needed)
-
-// Map palette hex -> single-letter yarn codes for compact patterns
 const HEX_TO_CODE = {
   "#ffffff": "W", // white
   "#000000": "K", // black
@@ -12,7 +8,6 @@ const HEX_TO_CODE = {
   "#8b5cf6": "P", // purple
 };
 
-// Convert "rgb(...)" to "#rrggbb"
 function rgbToHex(rgb) {
   if (!rgb) return null;
   const m = rgb.match(/\d+/g);
@@ -22,22 +17,19 @@ function rgbToHex(rgb) {
   return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
 }
 
-// Normalize any color (data-color or CSS) to our canonical hex keys
 function normalizeHex(hexOrRgb) {
   if (!hexOrRgb) return null;
   const s = hexOrRgb.trim().toLowerCase();
-  if (s.startsWith("#") && (s.length === 7)) return s;
+  if (s.startsWith("#") && s.length === 7) return s;
   if (s.startsWith("rgb")) return rgbToHex(s);
   return null;
 }
 
-// Helper: get code from color (defaults to white)
 function codeFromColor(colorStr) {
   const hex = normalizeHex(colorStr) || "#ffffff";
   return HEX_TO_CODE[hex] || "W";
 }
 
-// Export a 2D array of codes by reading #grid .cell in row-major order
 function exportCodeGridFromDOM() {
   const gridEl = document.getElementById("grid");
   const colsEl = document.getElementById("cols");
@@ -50,12 +42,11 @@ function exportCodeGridFromDOM() {
   const cellEls = Array.from(gridEl.querySelectorAll(".cell"));
   if (cellEls.length === 0) return [];
 
-  // chunk into rows of length `cols`
   const rows = [];
   for (let i = 0; i < cellEls.length; i += cols) {
     const rowCells = cellEls.slice(i, i + cols);
     const rowCodes = rowCells.map((cell) => {
-      // Prefer data-color if your painter sets it; fallback to computed background
+      
       const dataColor = cell.dataset?.color;
       const styleColor = getComputedStyle(cell).backgroundColor;
       const chosen = dataColor || styleColor;
@@ -66,7 +57,6 @@ function exportCodeGridFromDOM() {
   return rows;
 }
 
-// Run-length encode a row like ["W","W","K"] -> "2W 1K"
 function rleRow(codes) {
   if (codes.length === 0) return "";
   let out = [];
@@ -79,16 +69,34 @@ function rleRow(codes) {
   return out.join(" ");
 }
 
-// Build multi-line crochet pattern
 function buildPatternText(codeGrid) {
   return codeGrid.map((row, i) => `Row ${i + 1}: ${rleRow(row)}`).join("\n");
 }
 
-// Log pattern
-function logPattern() {
+function renderPattern() {
+  const outEl = document.getElementById("pattern-output");
   const codeGrid = exportCodeGridFromDOM();
+
+  if (!outEl) {
+    console.warn("Missing #pattern-output container.");
+    return;
+  }
+
+  if (!codeGrid.length) {
+    outEl.textContent = "No grid found. Click 'Generate Grid' and color some cells first.";
+    return;
+  }
+
   const patternText = buildPatternText(codeGrid);
 
+  // Show on page
+  outEl.textContent = patternText;
+
+  // Optional niceties
+  outEl.setAttribute("aria-live", "polite");
+  outEl.scrollIntoView({ behavior: "smooth", block: "nearest" });
+
+  // Still log for devs
   console.log("=== Crochet Pattern (2D Codes) ===");
   console.log(codeGrid);
   console.log("=== Crochet Pattern (RLE by Row) ===");
@@ -97,5 +105,5 @@ function logPattern() {
 
 document.addEventListener("DOMContentLoaded", () => {
   const patternBtn = document.getElementById("pattern");
-  if (patternBtn) patternBtn.addEventListener("click", logPattern);
+  if (patternBtn) patternBtn.addEventListener("click", renderPattern);
 });
