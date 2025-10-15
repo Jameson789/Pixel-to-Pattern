@@ -14,9 +14,18 @@ app.set('view engine', 'ejs');
 
 app.get('/', (req, res) => res.render('home'));
 
-app.get("/patterns", (req, res) => {
-  res.render("patterns"); // This looks for views/patterns.ejs
+app.get("/patterns", async (req, res) => {
+  try {
+    const [rows] = await pool.query(
+      "SELECT id, name, instructions, created_at FROM patterns ORDER BY id DESC"
+    );
+    res.render("patterns", { patterns: rows });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Failed to load patterns");
+  }
 });
+
 
 app.get('/health/db', async (_req, res) => {
   try {
