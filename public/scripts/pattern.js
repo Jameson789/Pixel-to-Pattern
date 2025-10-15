@@ -1,3 +1,7 @@
+// public/scripts/pattern.js
+// Generate + render pattern text, require a name, then POST to /api/patterns
+
+// --- Palette mapping (your codes) ---
 const HEX_TO_CODE = {
   "#ffffff": "W", // white
   "#000000": "K", // black
@@ -8,6 +12,7 @@ const HEX_TO_CODE = {
   "#8b5cf6": "P", // purple
 };
 
+// --- Color helpers ---
 function rgbToHex(rgb) {
   if (!rgb) return null;
   const m = rgb.match(/\d+/g);
@@ -16,7 +21,6 @@ function rgbToHex(rgb) {
   const toHex = (n) => n.toString(16).padStart(2, "0");
   return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
 }
-
 function normalizeHex(hexOrRgb) {
   if (!hexOrRgb) return null;
   const s = hexOrRgb.trim().toLowerCase();
@@ -24,21 +28,36 @@ function normalizeHex(hexOrRgb) {
   if (s.startsWith("rgb")) return rgbToHex(s);
   return null;
 }
-
 function codeFromColor(colorStr) {
   const hex = normalizeHex(colorStr) || "#ffffff";
   return HEX_TO_CODE[hex] || "W";
 }
 
+// --- Grid reading ---
+function getColCount(gridEl) {
+  // Prefer data-cols set by grid.js
+  const ds = Number(gridEl.dataset?.cols);
+  if (Number.isInteger(ds) && ds > 0) return ds;
+
+  // Fallback: CSS grid template
+  const styleCols = getComputedStyle(gridEl)
+    .gridTemplateColumns.trim()
+    .split(/\s+/)
+    .filter(Boolean).length;
+  if (styleCols > 0) return styleCols;
+
+  // Last resort: input field
+  const colsEl = document.getElementById("cols");
+  return parseInt(colsEl?.value, 10) || 10;
+}
+
 function exportCodeGridFromDOM() {
   const gridEl = document.getElementById("grid");
-  const colsEl = document.getElementById("cols");
   if (!gridEl) {
     console.error("Grid element #grid not found.");
     return [];
   }
-  const cols = parseInt(colsEl?.value, 10) || 10;
-
+  const cols = getColCount(gridEl);
   const cellEls = Array.from(gridEl.querySelectorAll(".cell"));
   if (cellEls.length === 0) return [];
 
@@ -46,33 +65,45 @@ function exportCodeGridFromDOM() {
   for (let i = 0; i < cellEls.length; i += cols) {
     const rowCells = cellEls.slice(i, i + cols);
     const rowCodes = rowCells.map((cell) => {
-      
       const dataColor = cell.dataset?.color;
       const styleColor = getComputedStyle(cell).backgroundColor;
-      const chosen = dataColor || styleColor;
-      return codeFromColor(chosen);
+      return codeFromColor(dataColor || styleColor);
     });
     rows.push(rowCodes);
   }
   return rows;
 }
 
+// --- RLE + text building (your format) ---
 function rleRow(codes) {
   if (codes.length === 0) return "";
-  let out = [];
-  let curr = codes[0], count = 1;
+  const out = [];
+  let curr = codes[0],
+    count = 1;
   for (let i = 1; i < codes.length; i++) {
     if (codes[i] === curr) count++;
-    else { out.push(`${count}${curr}`); curr = codes[i]; count = 1; }
+    else {
+      out.push(`${count}${curr}`);
+      curr = codes[i];
+      count = 1;
+    }
   }
   out.push(`${count}${curr}`);
   return out.join(" ");
 }
-
 function buildPatternText(codeGrid) {
   return codeGrid.map((row, i) => `Row ${i + 1}: ${rleRow(row)}`).join("\n");
 }
 
+// --- UI state ---
+let lastPatternText = ""; // what we rendered (and will POST)
+
+function setSaveEnabled(enabled) {
+  const saveBtn = document.getElementById("savePattern");
+  if (saveBtn) saveBtn.disabled = !enabled;
+}
+
+// --- Render preview (Jameson’s behavior) ---
 function renderPattern() {
   const outEl = document.getElementById("pattern-output");
   const codeGrid = exportCodeGridFromDOM();
@@ -81,29 +112,84 @@ function renderPattern() {
     console.warn("Missing #pattern-output container.");
     return;
   }
-
   if (!codeGrid.length) {
-    outEl.textContent = "No grid found. Click 'Generate Grid' and color some cells first.";
+    outEl.textContent =
+      "No grid found. Click 'Generate Grid' and color some cells first.";
+    lastPatternText = "";
+    setSaveEnabled(false);
     return;
   }
 
   const patternText = buildPatternText(codeGrid);
+  lastPatternText = patternText;
 
-  // Show on page
   outEl.textContent = patternText;
-
-  // Optional niceties
   outEl.setAttribute("aria-live", "polite");
   outEl.scrollIntoView({ behavior: "smooth", block: "nearest" });
 
-  // Still log for devs
+  // Dev logs
   console.log("=== Crochet Pattern (2D Codes) ===");
   console.log(codeGrid);
   console.log("=== Crochet Pattern (RLE by Row) ===");
   console.log(patternText);
+
+  // Enable save only if name is present
+  const name = (document.getElementById("patternName")?.value || "").trim();
+  setSaveEnabled(Boolean(name));
 }
 
+// --- POST helper ---
+async function savePatternToDB(name, instructions) {
+  const res = await fetch("/api/patterns", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name, instructions }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || res.statusText);
+  return data.id;
+}
+
+// --- Save click (requires label/name + rendered pattern) ---
+async function handleSaveClick() {
+  const nameInput = document.getElementById("patternName");
+  const name = (nameInput?.value || "").trim();
+
+  if (!lastPatternText) {
+    // No preview yet—generate it first
+    renderPattern();
+    if (!lastPatternText) return; // still nothing, bail
+  }
+  if (!name) {
+    alert("Please enter a pattern name before saving.");
+    nameInput?.focus();
+    return;
+  }
+
+  try {
+    const id = await savePatternToDB(name, lastPatternText);
+    alert(`Saved! Pattern ID: ${id}`);
+  } catch (err) {
+    console.error("Save failed:", err);
+    alert(`Save failed: ${err.message}`);
+  }
+}
+
+// --- Wire up ---
 document.addEventListener("DOMContentLoaded", () => {
   const patternBtn = document.getElementById("pattern");
+  const saveBtn = document.getElementById("savePattern");
+  const nameInput = document.getElementById("patternName");
+
   if (patternBtn) patternBtn.addEventListener("click", renderPattern);
+  if (saveBtn) saveBtn.addEventListener("click", handleSaveClick);
+
+  // Live-enable Save only when both name + preview exist
+  nameInput?.addEventListener("input", () => {
+    const hasName = Boolean(nameInput.value.trim());
+    setSaveEnabled(hasName && Boolean(lastPatternText));
+  });
+
+  // Start disabled
+  setSaveEnabled(false);
 });
