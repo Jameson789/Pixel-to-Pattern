@@ -1,5 +1,3 @@
-// public/scripts/grid.js
-
 const PALETTE = [
   { id: "white", hex: "#ffffff" },
   { id: "black", hex: "#000000" },

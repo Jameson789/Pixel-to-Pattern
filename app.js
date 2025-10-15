@@ -14,6 +14,10 @@ app.set('view engine', 'ejs');
 
 app.get('/', (req, res) => res.render('home'));
 
+app.get("/patterns", (req, res) => {
+  res.render("patterns"); // This looks for views/patterns.ejs
+});
+
 app.get('/health/db', async (_req, res) => {
   try {
     const [rows] = await pool.query('SELECT 1 AS ok');
