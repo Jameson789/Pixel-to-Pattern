@@ -8,22 +8,30 @@
 </head>
 <body>
   <h1>Pixel-To-Pattern</h1>
+
+  <!-- Optional nav link -->
   <a href="/patterns">Patterns Page</a>
+
   <div class="controls">
     <label>Rows: <input id="rows" type="number" value="10" min="1" max="50"></label>
     <label>Cols: <input id="cols" type="number" value="10" min="1" max="50"></label>
-    <button id="generate">Generate Grid</button>
+    <button id="generate" type="button">Generate Grid</button>
   </div>
+
   <div class="palette" id="palette"></div>
   <div class="grid" id="grid"></div>
-  <button id="pattern">Generate Pattern</button>
+
+  <button id="pattern" type="button">Generate Pattern</button>
+
   <pre id="pattern-output" class="pattern-box" aria-live="polite"></pre>
-    
-  <input id="patternName" placeholder="Pattern name (required)" aria-required="true" />
-  <button id="savePattern" disabled>Save Pattern</button>
 
-    <script src="/scripts/grid.js" defer></script>
-    <script src="/scripts/pattern.js" defer></script>
+  <label for="pattern-name">Label:</label>
+  <input id="pattern-name" type="text" placeholder="My Pattern" />
 
-  </body>
+  <button id="save" type="button">Save</button>
+
+  <!-- Order matters: grid first, then pattern -->
+  <script src="/scripts/grid.js" defer></script>
+  <script src="/scripts/pattern.js" defer></script>
+</body>
 </html>
