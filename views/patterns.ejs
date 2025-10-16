@@ -1,13 +1,30 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Patterns</title>
-    <link rel="stylesheet" href="/css/style.css" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Saved Patterns</title>
+  <link rel="stylesheet" href="/css/style.css" />
 </head>
 <body>
-    <h1>Patterns</h1>
-    <a href="/">Home Page</a>
+  <h1>Saved Crochet Patterns</h1>
+  <a href="/">Back to Home</a>
+
+  <% if (patterns && patterns.length) { %>
+    <ul class="pattern-list">
+      <% patterns.forEach(p => { %>
+        <li class="pattern-item">
+          <h2><%= p.name %> <small>(ID: <%= p.id %>)</small></h2>
+          <p>
+            <strong>Created:</strong>
+            <%= p.created_at.toLocaleString ? p.created_at.toLocaleString() : p.created_at %>
+          </p>
+          <pre class="pattern-box"><%= p.instructions %></pre>
+        </li>
+      <% }) %>
+    </ul>
+  <% } else { %>
+    <p>No patterns found yet. Try saving one from the home page.</p>
+  <% } %>
 </body>
 </html>
