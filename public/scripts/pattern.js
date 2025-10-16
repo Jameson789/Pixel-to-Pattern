@@ -58,10 +58,10 @@ document.addEventListener("DOMContentLoaded", () => {
   const saveBtn = document.getElementById("save");
   const nameInput = document.getElementById("pattern-name");
 
-  genBtn?.addEventListener("click", renderPattern);
-  nameInput?.addEventListener("input", updateSaveEnabled);
+  genBtn.addEventListener("click", renderPattern);
+  nameInput.addEventListener("input", updateSaveEnabled);
 
-  saveBtn?.addEventListener("click", async () => {
+  saveBtn.addEventListener("click", async () => {
     const name = (nameInput?.value || "").trim();
     if (!name) return alert("Please enter a name before saving.");
     if (!lastPatternText) return alert("Please generate a pattern first.");
