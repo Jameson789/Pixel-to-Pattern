@@ -1,22 +1,32 @@
 const PALETTE = [
-  { id: "white", hex: "#ffffff" },
-  { id: "black", hex: "#000000" },
-  { id: "red", hex: "#ef4444" },
-  { id: "green", hex: "#22c55e" },
-  { id: "blue", hex: "#3b82f6" },
+  { id: "white",  hex: "#ffffff" },
+  { id: "black",  hex: "#000000" },
+  { id: "red",    hex: "#ef4444" },
+  { id: "green",  hex: "#22c55e" },
+  { id: "blue",   hex: "#3b82f6" },
   { id: "yellow", hex: "#f59e0b" },
   { id: "purple", hex: "#8b5cf6" },
 ];
 
-let activeColor = PALETTE[1]; // default: black
+
+const HEX_TO_CODE = {
+  "#ffffff": "W",
+  "#000000": "K",
+  "#ef4444": "R",
+  "#22c55e": "G",
+  "#3b82f6": "B",
+  "#f59e0b": "Y",
+  "#8b5cf6": "P",
+};
+
+let activeColor = PALETTE[1]; 
 
 const paletteEl = document.getElementById("palette");
-const gridEl = document.getElementById("grid");
+const gridEl    = document.getElementById("grid");
 const rowsInput = document.getElementById("rows");
 const colsInput = document.getElementById("cols");
 const generateBtn = document.getElementById("generate");
 
-// --- Palette ---
 PALETTE.forEach((color, i) => {
   const sw = document.createElement("div");
   sw.className = "swatch" + (i === 1 ? " active" : "");
@@ -24,25 +34,24 @@ PALETTE.forEach((color, i) => {
   sw.title = color.id;
   sw.addEventListener("click", () => {
     activeColor = color;
-    document
-      .querySelectorAll(".swatch")
-      .forEach((s) => s.classList.remove("active"));
+    document.querySelectorAll(".swatch").forEach(s => s.classList.remove("active"));
     sw.classList.add("active");
   });
   paletteEl.appendChild(sw);
 });
 
-// --- Grid + paint state ---
-let cells = []; // 2D array: cells[row][col] -> HTMLElement
+let cells = [];
 
+// Drag/paint state
 let isMouseDown = false;
 let startRow = null;
 let startCol = null;
-let axis = null; // 'row' | 'col' | null
+let axis = null; // "row" | "col" | null
 
 function setCellColor(r, c, hex) {
   const cell = cells[r][c];
   cell.dataset.color = hex;
+  cell.dataset.code  = HEX_TO_CODE[hex] || "W"; // <- single source of truth for yarn code
   cell.style.background = hex;
 }
 
@@ -69,22 +78,22 @@ function handleEnter(cellEl) {
   if (axis == null) {
     if (r === startRow && c !== startCol) axis = "row";
     else if (c === startCol && r !== startRow) axis = "col";
-    else return; // still over the start cell
+    else return; // still on the start cell
   }
 
-  // Ignore diagonals / switching axis mid-drag
-  if ((axis === "row" && r !== startRow) || (axis === "col" && c !== startCol))
-    return;
+  // Ignore diagonals or switching axis mid-drag
+  if ((axis === "row" && r !== startRow) || (axis === "col" && c !== startCol)) return;
 
   paintSegmentTo(r, c);
 }
 
-// --- Build (resizable) grid ---
+// Build (and replace) the grid to a given size
 function buildGrid(rows, cols) {
-  // Reset container & state
   gridEl.innerHTML = "";
   gridEl.style.gridTemplateColumns = `repeat(${cols}, 30px)`;
-  gridEl.style.gridTemplateRows = `repeat(${rows}, 30px)`;
+  gridEl.style.gridTemplateRows    = `repeat(${rows}, 30px)`;
+  gridEl.dataset.rows = String(rows);
+  gridEl.dataset.cols = String(cols);
   cells = [];
 
   for (let r = 0; r < rows; r++) {
@@ -95,12 +104,13 @@ function buildGrid(rows, cols) {
       cell.dataset.row = String(r);
       cell.dataset.col = String(c);
       cell.dataset.color = "#ffffff";
+      cell.dataset.code  = "W";
       cell.style.background = "#ffffff";
       cell.draggable = false;
 
       // Start stroke, paint starting cell immediately
       cell.addEventListener("mousedown", (e) => {
-        e.preventDefault(); // prevent text selection/drag ghost
+        e.preventDefault(); // avoid text selection / drag ghost
         isMouseDown = true;
         startRow = r;
         startCol = c;
@@ -111,7 +121,7 @@ function buildGrid(rows, cols) {
       // Extend stroke when moving into cells
       cell.addEventListener("mouseenter", () => handleEnter(cell));
 
-      // Optional: prevent native drag image
+      // Prevent native drag image
       cell.addEventListener("dragstart", (e) => e.preventDefault());
 
       rowArr.push(cell);
@@ -139,3 +149,6 @@ if (generateBtn) {
     buildGrid(rows, cols);
   });
 }
+
+// Expose cells for pattern.js (if needed globally)
+window.cells = cells;
