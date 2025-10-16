@@ -45,23 +45,26 @@ app.get('/ping', async (_req, res) => {
 });
 
 app.post('/api/patterns', async (req, res) => {
-  try {
-    const { name, instructions } = req.body;
-    if (typeof name !== 'string' || !name.trim() ||
-        typeof instructions !== 'string' || !instructions.trim()) {
-      return res.status(400).json({ error: 'name and instructions are required strings' });
-    }
+  const name = req.body.name ? req.body.name.trim() : '';
+  const instructions = req.body.instructions || '';
 
+  if (!name) {
+    return res.status(400).json({ error: 'name is required' });
+  }
+
+  try {
     const [result] = await pool.query(
       'INSERT INTO patterns (name, instructions) VALUES (?, ?)',
-      [name.trim(), instructions]
+      [name, instructions]
     );
-    res.status(201).json({ id: result.insertId, name: name.trim() });
+
+    res.status(201).json({ id: result.insertId, name });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'insert failed', message: err.message });
+    res.status(500).json({ error: 'insert failed' });
   }
 });
+
 
 app.listen(PORT, HOST, () => {
   console.log(`Running on http://${HOST}:${PORT}`);
